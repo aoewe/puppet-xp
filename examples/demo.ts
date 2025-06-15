@@ -4,7 +4,7 @@
  * wechaty-puppet-xp示例代码，可以作为模版编写自己的业务逻辑.
  *
 **/
-import 'dotenv/config.js'
+import 'dotenv/config'
 
 import {
   Contact,
@@ -18,6 +18,25 @@ import {
 import qrcodeTerminal from 'qrcode-terminal'
 import { FileBox } from 'file-box'
 import { PuppetXp } from '../src/puppet-xp.js'
+import { getQwenReply, activateChat, deactivateChat, isChatActive } from '../src/AiReply/qwen.js'
+
+// 存储激活的群聊ID
+const activeRooms = new Set<string>();
+
+// 激活群聊
+const activateRoom = (roomId: string) => {
+  activeRooms.add(roomId);
+}
+
+// 关闭群聊
+const deactivateRoom = (roomId: string) => {
+  activeRooms.delete(roomId);
+}
+
+// 检查群聊是否激活
+const isRoomActive = (roomId: string): boolean => {
+  return activeRooms.has(roomId);
+}
 
 const onScan = (qrcode: string, status: ScanStatus) => {
   if (status === ScanStatus.Waiting || status === ScanStatus.Timeout) {
@@ -69,56 +88,58 @@ const onMessage = async (msg: Message) => {
   }
   log.info('messageJson', JSON.stringify(messageJson, null, 2))
 
-  //   log.info('talker', JSON.stringify(talker))
-  //   log.info('listener', listener || 'undefined')
-  //   log.info('room', room || 'undefined')
-  //   log.info('text', text)
-  //   log.info('type', type)
-  //   log.info('self', self ? 'true' : 'false')
-
   try {
-    switch (text) {
-      case 'ding': // 接收到的消息是ding，回复dong
-        await msg.say('dong')
-        break
-      case 'send text': // 接收到的消息是send text，发送文本消息
-        await msg.say('this is a test text')
-        break
-      case 'send image': {
-        // 接收到的消息是send image，发送图片
-        const image = FileBox.fromUrl('https://wechaty.js.org/assets/logo.png')
-        await msg.say(image)
-        break
+    // 处理群聊的激活/关闭命令
+    if (type === types.Message.Text && !self && room) {
+      const roomId = room.id;
+
+      if (text === '启动群AI聊天') {
+        activateRoom(roomId);
+        await msg.say('本群的AI聊天已启动，现在可以和我对话了！');
+        return;
       }
-      case 'send file': {
-        // 接收到的消息是send file，发送文件
-        const fileBox = FileBox.fromUrl('https://wechaty.js.org/assets/logo.png')
-        await msg.say(fileBox)
-        break
+
+      if (text === '关闭群AI聊天') {
+        deactivateRoom(roomId);
+        await msg.say('本群的AI聊天已关闭，下次再见！');
+        return;
       }
-      case 'send video': {
-        // 接收到的消息是send video，发送视频
-        const video = FileBox.fromUrl('http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4')
-        await msg.say(video)
-        break
+
+      // 只有在群聊被激活的情况下才回复
+      if (isRoomActive(roomId)) {
+        // 可以添加@机器人的判断
+        const isMentioned = await msg.mentionSelf();
+        if (isMentioned) {
+          const aiReply = await getQwenReply(text);
+          await msg.say(aiReply);
+        }
       }
-      case 'send audio': {
-        // 接收到的消息是send audio，发送音频
-        const audio = FileBox.fromUrl('http://www.zhongguoyinhang.com/upload/2018-11/201811161154314128.mp3')
-        await msg.say(audio)
-        break
+    }
+
+    // 处理私聊的激活/关闭命令
+    if (type === types.Message.Text && !self && !room) {
+      const userId = talker.id;
+
+      if (text === '启动AI聊天') {
+        activateChat(userId);
+        await msg.say('AI聊天已启动，现在可以和我对话了！');
+        return;
       }
-      case 'send emotion': {
-        // 接收到的消息是send emotion，发送表情
-        const emotion = FileBox.fromUrl('https://res.wx.qq.com/mpres/htmledition/images/icon/emotion/0.gif')
-        await msg.say(emotion)
-        break
+
+      if (text === '关闭') {
+        deactivateChat(userId);
+        await msg.say('AI聊天已关闭，下次再见！');
+        return;
       }
-      default:
-        break
+
+      // 只有在私聊被激活的情况下才回复
+      if (isChatActive(userId)) {
+        const aiReply = await getQwenReply(text);
+        await msg.say(aiReply);
+      }
     }
   } catch (e) {
-    log.error('回复消息失败...', e)
+    log.error('AI reply failed...', e)
   }
 
   try {
@@ -126,48 +147,42 @@ const onMessage = async (msg: Message) => {
       case types.Message.Text: // 接收到的消息是文本
         log.info('接收到的消息是文本...')
         log.info('消息内容：', text)
+        // 处理文本消息
         break
       case types.Message.Image: {
         // 接收到的消息是图片
-        log.info('接收到的消息是图片...')
-        const image = await msg.toImage().thumbnail()  // Save the media message as a FileBox
-        const filePath = 'examples/file/' + image.name
-        try {
-          await image.toFile(filePath, true)
-          log.info(`Saved file: ${filePath}`)
-        } catch (e) {
-          log.error('保存文件错误：', e)
-        }
+        log.info('接收到的消息是图片，暂不处理...')
         break
       }
       case types.Message.Attachment: // 接收到的消息是附件
-        log.info('接收到的消息是附件...')
+        log.info('接收到的消息是附件，暂不处理...')
         break
       case types.Message.Video: // 接收到的消息是视频
-        log.info('接收到的消息是视频...')
+        log.info('接收到的消息是视频，暂不处理...')
         break
       case types.Message.Audio: // 接收到的消息是音频
-        log.info('接收到的消息是音频...')
+        log.info('接收到的消息是音频，暂不处理...')
         break
       case types.Message.Emoticon: // 接收到的消息是表情
-        log.info('接收到的消息是表情...')
+        log.info('接收到的消息是表情，暂不处理...')
         break
       case types.Message.Url: // 接收到的消息是链接
-        log.info('接收到的消息是链接...')
+        log.info('接收到的消息是链接，暂不处理...')
         break
       case types.Message.MiniProgram: // 接收到的消息是小程序
-        log.info('接收到的消息是小程序...')
+        log.info('接收到的消息是小程序，暂不处理...')
         break
       case types.Message.Transfer: // 接收到的消息是转账
-        log.info('接收到的消息是转账...')
+        log.info('接收到的消息是转账，暂不处理...')
         break
       case types.Message.RedEnvelope: // 接收到的消息是红包
-        log.info('接收到的消息是红包...')
+        log.info('接收到的消息是红包，暂不处理...')
         break
       case types.Message.Recalled: // 接收到的消息是撤回的消息
-        log.info('接收到的消息是撤回的消息...')
+        log.info('接收到的消息是撤回的消息，暂不处理...')
         break
       default:
+        log.info('收到未知类型消息，暂不处理')
         break
     }
   } catch (e) {

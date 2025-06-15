@@ -42,8 +42,8 @@ async function onLogin (user: Contact) {
   log.info('好友数量：', friends.length)
 
   // 发送@好友消息
-  const room = await bot.Room.find({ topic:'大师是群主' })
-  const contact = await bot.Contact.find({ name:'luyuchao' })
+  const room = await bot.Room.find({ topic:'AI机器人' })
+  const contact = await bot.Contact.find({ name:'Z' })
   await contact?.say('你好，我是瓦力！')
 
   if (room && contact) {

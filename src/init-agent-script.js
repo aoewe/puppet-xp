@@ -8,8 +8,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
@@ -327,12 +327,12 @@ var readAll = function (input) { return __awaiter(_this, void 0, void 0, functio
 var offsets = {
     // kDoAddMsg: 0x23D2B10, // done
     kDoAddMsg: 0x2205510,
-    kGetAccountServiceMgr: 0x1C1FE90,
+    kGetAccountServiceMgr: 0x1C1FE90, // done
     kSyncMsg: 0xc39680,
     kSyncMsgNext: 0xc39680,
-    kGetSendMessageMgr: 0x1C1E690,
-    kSendTextMsg: 0x238DDD0,
-    kFreeChatMsg: 0x1C1FF10,
+    kGetSendMessageMgr: 0x1C1E690, // done
+    kSendTextMsg: 0x238DDD0, // done
+    kFreeChatMsg: 0x1C1FF10, // done
     // const uint64_t kGetContactMgr = 0x1C0BDE0;
     kGetContactMgr: 0x1C0BDE0,
     // const uint64_t kSearchContactMgr = 0x2065F80;
@@ -348,9 +348,9 @@ var offsets = {
     // const uint64_t kAccountServiceMgr = 0x1C1FE90;
     kAccountServiceMgr: 0x1C1FE90,
     // const uint64_t kGetAppDataSavePath = 0x26A7780;
-    kGetAppDataSavePath: 0x26A7780,
+    kGetAppDataSavePath: 0x26A7780, // done
     // const uint64_t kGetCurrentDataPath = 0x2314E40;
-    kGetCurrentDataPath: 0x2314E40,
+    kGetCurrentDataPath: 0x2314E40, // done
     // const uint64_t kNewContact = 0x25E3650;
     kNewContact: 0x25E3650,
     // const uint64_t kFreeContact = 0x25E3D00;
@@ -390,7 +390,30 @@ var offsets = {
     kSendPatMsg: 0x2D669B0,
     // const uint64_t kFreeChatMsg = 0x1C1FF10;
     // const uint64_t kNewChatMsg = 0x1C28800;
-    kNewChatMsg: 0x1C28800
+    kNewChatMsg: 0x1C28800,
+    // const uint64_t kCreateChatRoom = 0x221AF50;
+    // const uint64_t kChatRoomInfoConstructor = 0x25CF470;
+    // const uint64_t kGetChatRoomDetailInfo = 0x222BEA0;
+    // const uint64_t kGetChatroomMemberDetail = 0x2226C80;
+    // const uint64_t kDoAddMemberToChatRoom = 0x221B8A0;
+    // const uint64_t kDoDelMemberFromChatRoom = 0x221BEE0;
+    // const uint64_t kInviteMemberToChatRoom = 0x221B280;
+    // const uint64_t kQuitAndDelChatRoom = 0x2225EF0;
+    // const uint64_t kModChatRoomTopic = 0x2364610;
+    // const uint64_t kGetA8Key = 0x24ABD40;
+    // const uint64_t kTimelineGetFirstPage = 0x2EFE660;
+    // const uint64_t kTimelineGetNextPage = 0x2EFEC00;
+    // const uint64_t kSnsObjectDetail = 0x2EFDEC0;
+    // const uint64_t kSnsObjectLike = 0x2F113D0;
+    // const uint64_t kSnsObjectOp = 0x2F13670;
+    // const uint64_t kSnsObjectDoComment = 0x2EFD0F0;
+    // const uint64_t kStartupDownloadMedia = 0x2596780;
+    // const uint64_t kDoAddMsg = 0x23D2B10;
+    // const uint64_t kJSLogin =  0x27826A0;
+    // const uint64_t kTenPayTransferConfirm = 0x304C700;
+    // const uint64_t kSceneCenterStartTask = 0x2454F70;					//must do scene after auth
+    // const uint64_t kMessageLoop = 0x397B400;							//Chrome.MessageLoopProblem (__int64 a1, __int64 a2)
+    // const uint64_t kWMDestroy = 0x2119240;	
 };
 var moduleBaseAddress = Module.getBaseAddress('WeChatWin.dll');
 var selfInfo = {};
@@ -526,7 +549,7 @@ var contactSelfInfo = function () {
         corporation: '',
         title: '',
         description: '',
-        phone: [out.mobile]
+        phone: [out.mobile],
     };
     return myself;
 };
@@ -592,7 +615,7 @@ function parseContact(start) {
         verify_flag: start.add(0x70).readS32(),
         type: start.add(0x74).readS32(),
         reserved1: start.add(0x1F0).readS32(),
-        reserved2: start.add(0x1F4).readS32()
+        reserved2: start.add(0x1F4).readS32(),
     };
     // console.log('temp:', JSON.stringify(temp, null, 2))
     var info = {};
@@ -734,7 +757,7 @@ function parseContact(start) {
         corporation: '',
         title: '',
         description: '',
-        phone: []
+        phone: [],
     };
     return contact;
 }
@@ -1119,7 +1142,7 @@ Interceptor.attach(moduleBaseAddress.add(offsets.kSendPatMsg), {
             console.error('接收消息回调失败：', e);
             throw new Error(e);
         }
-    }
+    },
 });
 /*---------------------Hook---------------------*/
 /*
@@ -1186,15 +1209,15 @@ var recvMsgNativeCallback = (function () {
                     }
                     var message = {
                         id: msg.msgId,
-                        filename: filename,
+                        filename: filename, // 只有在发送文件时需要
                         text: text,
                         timestamp: msg.createTime,
                         type: msgType_1,
                         talkerId: talkerId,
                         roomId: room,
                         mentionIds: [],
-                        listenerId: listenerId,
-                        isSelf: isSelf
+                        listenerId: listenerId, // 在一对一聊天中使用
+                        isSelf: isSelf,
                     };
                     // console.log('message:', JSON.stringify(message, null, 2))
                     // send(message)
@@ -1222,7 +1245,7 @@ var recvMsgNativeCallback = (function () {
                     console.error('接收消息回调失败：', e);
                     throw new Error(e);
                 }
-            }
+            },
         });
         return nativeCallback;
     }
@@ -1247,7 +1270,7 @@ function HandleSyncMsg(param1, param2, param3) {
         createTime: 0,
         displayFullContent: '',
         type: 0,
-        isSelf: false
+        isSelf: false,
     };
     msg.msgId = param2.add(0x30).readS64(); // 消息ID
     // console.log("msg.msgId: " + msg.msgId);
@@ -1279,9 +1302,9 @@ function HandleSyncMsg(param1, param2, param3) {
         // findIamgePathAddr(param2)
         msg.base64Img = '';
         msg.content = JSON.stringify([
-            thumb,
-            thumb,
-            extra,
+            thumb, //  PUPPET.types.Image.Unknown
+            thumb, //  PUPPET.types.Image.Thumbnail
+            extra, //  PUPPET.types.Image.HD
             extra, //  PUPPET.types.Image.Artwork
         ]);
     }
